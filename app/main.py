@@ -80,25 +80,22 @@ MODEL_METADATA = {}  # Store model metadata (accuracy, training date, etc.)
 
 @app.on_event("startup")
 async def startup_event():
-    """Load pre-trained models from train_external_data.py on startup"""
+    """Scan for available models on startup but DO NOT load them into memory"""
     
     print("\n" + "="*70)
-    print("LOADING PRE-TRAINED MODELS")
+    print("SCANNING FOR MODELS (LAZY LOADING ENABLED)")
     print("="*70)
     
     if not os.path.exists(settings.MODELS_DIR):
         print(f"⚠ Model directory not found: {settings.MODELS_DIR}")
-        print("  Models will be trained on-demand from database")
-        print("  Run train_external_data.py to create pre-trained models")
         return
     
-    loaded_count = 0
+    found_count = 0
     
     # Scan for pre-trained models
     for filename in os.listdir(settings.MODELS_DIR):
         if filename.endswith("_model.h5"):
             # Extract commodity and data_type from filename
-            # Format: commodity_datatype_model.h5
             base_name = filename.replace("_model.h5", "")
             parts = base_name.rsplit("_", 1)
             
@@ -107,36 +104,24 @@ async def startup_event():
                 model_key = f"{commodity}_{data_type}"
                 
                 try:
-                    # Load model
-                    model_path = os.path.join(settings.MODELS_DIR, base_name)
-                    forecaster = LSTMForecaster()
-                    forecaster.load_model(model_path)
-                    
-                    # Load metadata if available
-                    metadata_path = f"{model_path}_metadata.json"
-                    metadata = None
+                    # Load metadata ONLY
+                    metadata_path = os.path.join(settings.MODELS_DIR, f"{base_name}_metadata.json")
                     if os.path.exists(metadata_path):
                         with open(metadata_path, 'r') as f:
                             metadata = json.load(f)
                         MODEL_METADATA[model_key] = metadata
-                    
-                    MODEL_CACHE[model_key] = forecaster
-                    loaded_count += 1
-                    
-                    # Show model info
-                    acc = metadata.get('performance_metrics', {}).get('accuracy', 'N/A')
-                    print(f"  ✓ {commodity.capitalize():<12} {data_type:<8} (Accuracy: {acc if isinstance(acc, str) else f'{acc:.1f}%'})")
+                        found_count += 1
+                        
+                        # Show model info
+                        acc = metadata.get('performance_metrics', {}).get('accuracy', 'N/A')
+                        print(f"  ✓ Found {commodity.capitalize():<12} {data_type:<8} (Accuracy: {acc if isinstance(acc, str) else f'{acc:.1f}%'})")
                     
                 except Exception as e:
-                    print(f"  ✗ Failed to load {model_key}: {e}")
+                    print(f"  ✗ Failed to read metadata for {model_key}: {e}")
     
-    if loaded_count > 0:
-        print(f"\n✅ Loaded {loaded_count} pre-trained models")
-    else:
-        print("\n⚠ No pre-trained models found")
-        print("  Models will be trained on-demand from database")
-    
+    print(f"\n✅ Found {found_count} models (will be loaded on demand)")
     print("="*70 + "\n")
+
 
 
 # ============================================================================
@@ -387,12 +372,30 @@ async def generate_forecast(request: ForecastRequest):
         # Create model key
         model_key = f"{request.commodity.lower()}_{request.data_type}"
         
-        # Check if pre-trained model exists
-        use_pretrained = model_key in MODEL_CACHE
+        # Check if pre-trained model exists (in cache or on disk)
+        use_pretrained = False
+        
+        # 1. Check cache first
+        if model_key in MODEL_CACHE:
+            use_pretrained = True
+            forecaster = MODEL_CACHE[model_key]
+        # 2. Check disk if not in cache (Lazy Loading)
+        elif model_key in MODEL_METADATA:
+            try:
+                print(f"📥 Loading model from disk: {model_key}")
+                model_path = os.path.join(settings.MODELS_DIR, f"{request.commodity.lower()}_{request.data_type}")
+                forecaster = LSTMForecaster()
+                forecaster.load_model(model_path)
+                
+                # Cache it (optional: implement LRU eviction later if needed)
+                MODEL_CACHE[model_key] = forecaster
+                use_pretrained = True
+            except Exception as e:
+                print(f"⚠ Failed to load existing model {model_key}: {e}")
+                use_pretrained = False
         
         if use_pretrained:
             print(f"📦 Using pre-trained model: {request.commodity} - {request.data_type}")
-            forecaster = MODEL_CACHE[model_key]
             model_metadata = MODEL_METADATA.get(model_key, {})
         else:
             print(f"🔨 Training new model from database: {request.commodity} - {request.data_type}")
