@@ -1,0 +1,36 @@
+{
+  "commodity": "Ginger",
+  "data_type": "price",
+  "training_date": "2026-02-08T16:18:40.617557",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Ginger",
+    "data_type": "price",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 38.515,
+      "max": 172.485,
+      "mean": 106.1109595737185,
+      "std": 16.67720992646953
+    }
+  },
+  "performance_metrics": {
+    "mse": 228.26381924306952,
+    "rmse": 15.1084022730092,
+    "mae": 10.940248140607562,
+    "mape": 12.622946317442379,
+    "accuracy": 87.37705368255762
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

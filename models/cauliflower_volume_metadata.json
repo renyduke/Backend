@@ -1,0 +1,36 @@
+{
+  "commodity": "Cauliflower",
+  "data_type": "volume",
+  "training_date": "2026-02-08T16:16:04.349885",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Cauliflower",
+    "data_type": "volume",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 917.0,
+      "max": 30915.0,
+      "mean": 15630.849568434032,
+      "std": 5731.79302289185
+    }
+  },
+  "performance_metrics": {
+    "mse": 25169203.68086481,
+    "rmse": 5016.8918346786,
+    "mae": 3534.737060546875,
+    "mape": 27.915654544051865,
+    "accuracy": 72.08434545594814
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

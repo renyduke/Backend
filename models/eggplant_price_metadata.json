@@ -1,0 +1,36 @@
+{
+  "commodity": "Eggplant",
+  "data_type": "price",
+  "training_date": "2026-02-08T16:15:08.500476",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Eggplant",
+    "data_type": "price",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 36.195,
+      "max": 176.11,
+      "mean": 106.01105652927015,
+      "std": 17.418944505081416
+    }
+  },
+  "performance_metrics": {
+    "mse": 543.4224525932501,
+    "rmse": 23.31142322110021,
+    "mae": 17.060201187133792,
+    "mape": 24.18835310886117,
+    "accuracy": 75.81164689113884
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

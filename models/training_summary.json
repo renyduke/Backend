@@ -1,0 +1,327 @@
+{
+  "timestamp": "2026-02-08T16:19:41.765530",
+  "config": {
+    "csv_path": "vegetable_price_lstm_10000_structured.csv",
+    "columns": {
+      "date": "date",
+      "commodity": "commodity",
+      "volume": "volume",
+      "price": "price_avg"
+    },
+    "commodities": [
+      "Cabbage",
+      "Tomato",
+      "Potato",
+      "Carrots",
+      "Green_Onion",
+      "Lettuce",
+      "Eggplant",
+      "Cucumber",
+      "Cauliflower",
+      "Petchay",
+      "Pepper",
+      "Squash",
+      "Sayote",
+      "Broccoli",
+      "Camote",
+      "Ginger",
+      "Beans",
+      "Radish"
+    ],
+    "sequence_length": 4,
+    "epochs": 100,
+    "test_weeks": 8,
+    "model_dir": "models",
+    "plot_dir": "plots"
+  },
+  "results": [
+    {
+      "commodity": "Cabbage",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 88.46284231841996,
+      "mae": 13.0504173714774,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Cabbage",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 74.62954062885154,
+      "mae": 3219.2066650390625,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Tomato",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 82.93696291697472,
+      "mae": 17.45762901306152,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Tomato",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 76.72842013454998,
+      "mae": 3753.3680419921875,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Potato",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 86.10885244524191,
+      "mae": 11.358665308271137,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Potato",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 68.84028577730312,
+      "mae": 4470.1861572265625,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Carrots",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 87.0477907153822,
+      "mae": 17.16840257372175,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Carrots",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 29.227667851771983,
+      "mae": 5121.4158935546875,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Green_Onion",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 93.86768168403651,
+      "mae": 6.316230975559781,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Green_Onion",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 58.001741894909664,
+      "mae": 4218.05029296875,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Lettuce",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 87.74484109412059,
+      "mae": 12.462383962358741,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Lettuce",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 66.29773472870394,
+      "mae": 3855.7698974609375,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Eggplant",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 75.81164689113884,
+      "mae": 17.060201187133792,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Eggplant",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 46.646976029279394,
+      "mae": 4931.797607421875,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Cucumber",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 91.31654559948005,
+      "mae": 9.540479447501045,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Cucumber",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 72.37939972900988,
+      "mae": 4283.8331298828125,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Cauliflower",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 90.32597041254621,
+      "mae": 9.763060547964916,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Cauliflower",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 72.08434545594814,
+      "mae": 3534.737060546875,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Petchay",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 95.72545512437031,
+      "mae": 5.320026533944265,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Petchay",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 61.60218795955783,
+      "mae": 4503.081787109375,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Pepper",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 81.90702418323502,
+      "mae": 15.676054910932267,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Pepper",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 47.60245727477288,
+      "mae": 5659.6824951171875,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Squash",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 78.90776657989798,
+      "mae": 20.096861512320388,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Squash",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 48.73198764988357,
+      "mae": 6344.1136474609375,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Sayote",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 90.89721879339956,
+      "mae": 9.255643833705358,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Sayote",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 74.58787991760946,
+      "mae": 4057.6502685546875,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Broccoli",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 90.73125322986313,
+      "mae": 9.285007177080432,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Broccoli",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 59.469958035960694,
+      "mae": 3315.7705078125,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Camote",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 92.05853803314062,
+      "mae": 8.358992778233123,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Camote",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 75.2665789573268,
+      "mae": 3059.0382080078125,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Ginger",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 87.37705368255762,
+      "mae": 10.940248140607562,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Ginger",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 28.946472036219234,
+      "mae": 3438.7027587890625,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Beans",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 82.0120786473061,
+      "mae": 16.052340382167273,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Beans",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 51.172002302646014,
+      "mae": 5857.4456787109375,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Radish",
+      "data_type": "price",
+      "status": "SUCCESS",
+      "accuracy": 87.13130522383797,
+      "mae": 14.99875463213239,
+      "weeks_trained": 1622
+    },
+    {
+      "commodity": "Radish",
+      "data_type": "volume",
+      "status": "SUCCESS",
+      "accuracy": 73.19736379523178,
+      "mae": 3679.5821533203125,
+      "weeks_trained": 1622
+    }
+  ]
+}

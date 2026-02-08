@@ -1,0 +1,36 @@
+{
+  "commodity": "Broccoli",
+  "data_type": "volume",
+  "training_date": "2026-02-08T16:18:05.055692",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Broccoli",
+    "data_type": "volume",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 422.0,
+      "max": 28764.0,
+      "mean": 15560.60049321825,
+      "std": 5517.965133341648
+    }
+  },
+  "performance_metrics": {
+    "mse": 15662382.038990974,
+    "rmse": 3957.5727458874303,
+    "mae": 3315.7705078125,
+    "mape": 40.530041964039306,
+    "accuracy": 59.469958035960694
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

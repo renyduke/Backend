@@ -19,7 +19,10 @@ import matplotlib.pyplot as plt
 import os
 import json
 from datetime import datetime
-from lstm_forecaster import LSTMForecaster, calculate_metrics
+try:
+    from .lstm_forecaster import LSTMForecaster, calculate_metrics
+except ImportError:
+    from lstm_forecaster import LSTMForecaster, calculate_metrics
 
 # ============================================================================
 # CONFIGURATION - MODIFY THESE SETTINGS
@@ -31,10 +34,10 @@ CONFIG = {
     
     # Column names in your CSV (adjust based on your dataset)
     'columns': {
-        'date': 'Date',           # Date column name
-        'commodity': 'Commodity',  # Commodity/Item column name
-        'volume': 'Volume',        # Volume/Quantity column (if available)
-        'price': 'Price'           # Price column name
+        'date': 'date',           # Date column name
+        'commodity': 'commodity',  # Commodity/Item column name
+        'volume': 'volume',        # Volume/Quantity column (if available)
+        'price': 'price_avg'       # Price column name
     },
     
     # Commodities to train (must match names in your CSV)
@@ -43,12 +46,12 @@ CONFIG = {
         'Tomato',
         'Potato',
         'Carrots',
-        'Green Onion',
+        'Green_Onion',
         'Lettuce',
         'Eggplant',
         'Cucumber',
         'Cauliflower',
-        'Pechay',
+        'Petchay',
         'Pepper',
         'Squash',
         'Sayote',
@@ -494,42 +497,145 @@ def print_training_summary(results_summary):
 # MAIN EXECUTION
 # ============================================================================
 
-def main():
-    """Main execution function"""
+# Global logger function
+def log(message, callback=None):
+    if callback:
+        callback(message)
+    else:
+        print(message)
+
+def start_training(config=None, log_callback=None):
+    """
+    Start the training process with optional config override and log callback.
+    config: dict (optional) - Override checking CONFIG
+    log_callback: function(str) - Function to receive log messages
+    """
+    global CONFIG
     
-    print("\n")
-    print("="*70)
-    print(" "*15 + "LSTM MODEL TRAINING FROM EXTERNAL DATA")
-    print("="*70)
+    # Use provided config or default
+    active_config = config if config else CONFIG
+
+    # Update global config if needed (for other functions using it)
+    if config:
+        CONFIG.update(config)
+
+    log("\n", log_callback)
+    log("="*70, log_callback)
+    log(" "*15 + "LSTM MODEL TRAINING FROM EXTERNAL DATA", log_callback)
+    log("="*70, log_callback)
     
     try:
+        log(f"Starting training with config: {active_config.get('csv_path', 'default')}", log_callback)
+        
         # Step 1: Load dataset
-        df = load_csv_data(CONFIG['csv_path'])
+        # We need to modify helper functions to use the logger, 
+        # but for now we'll just redirect their stdout if possible or accept they print to console
+        # A better approach is to pass the logger down, but that requires rewriting all functions.
+        # For this implementation, we will assume helper functions print to console, 
+        # and we will log major steps here.
+        
+        # Reloading data with new path if specified
+        csv_path = active_config['csv_path']
+        if not os.path.exists(csv_path):
+             raise FileNotFoundError(f"CSV file not found: {csv_path}")
+
+        log(f"Loading dataset from {csv_path}...", log_callback)
+        df = pd.read_csv(csv_path)
+        log(f"Dataset loaded: {len(df)} rows", log_callback)
         
         # Step 2: Batch train all commodities
-        results_summary = batch_train_all_commodities(df)
+        # We'll reimplement the loop here to log progress
+        log("\n" + "="*70, log_callback)
+        log("BATCH TRAINING - ALL COMMODITIES", log_callback)
+        log("="*70, log_callback)
         
-        # Step 3: Print summary
-        print_training_summary(results_summary)
+        commodities = active_config['commodities']
+        results_summary = []
         
-        print("\n✅ Training complete! Models are ready to use in your FastAPI app.")
-        print(f"   Model directory: {CONFIG['model_dir']}/")
-        print(f"   Plots directory: {CONFIG['plot_dir']}/")
+        total_steps = len(commodities) * 2
+        current_step = 0
         
-    except FileNotFoundError as e:
-        print(f"\n❌ ERROR: {str(e)}")
-        print("\nTo get started:")
-        print("1. Download a dataset from Kaggle:")
-        print("   - Daily Vegetable Prices in India")
-        print("   - Agricultural Commodity Prices")
-        print("2. Update CONFIG['csv_path'] in this file")
-        print("3. Run this script again: python train_external_data.py")
+        for i, commodity in enumerate(commodities, 1):
+            log(f"\nProcessing Commodity {i}/{len(commodities)}: {commodity}", log_callback)
+            
+            for data_type in ['price', 'volume']:
+                current_step += 1
+                try:
+                    log(f"  Training {commodity} - {data_type} ({current_step}/{total_steps})...", log_callback)
+                    
+                    # Prepare data
+                    data_dict = convert_to_weekly_data(df, commodity, data_type)
+                    
+                    # Train model
+                    train_results = train_lstm_model(data_dict, commodity, data_type)
+                    
+                    # Create visualizations
+                    create_visualizations(train_results, data_dict, commodity, data_type)
+                    
+                    # Save model
+                    save_model_and_metadata(train_results, data_dict, commodity, data_type)
+                    
+                    # Record success
+                    results_summary.append({
+                        'commodity': commodity,
+                        'data_type': data_type,
+                        'status': 'SUCCESS',
+                        'accuracy': train_results['metrics']['accuracy'],
+                        'mae': train_results['metrics']['mae'],
+                        'weeks_trained': len(data_dict['values'])
+                    })
+                    
+                    log(f"  ✅ SUCCESS: {commodity} - {data_type} (Acc: {train_results['metrics']['accuracy']:.2f}%)", log_callback)
+                    
+                except Exception as e:
+                    log(f"  ❌ FAILED: {commodity} - {data_type}", log_callback)
+                    log(f"     Error: {str(e)}", log_callback)
+                    
+                    results_summary.append({
+                        'commodity': commodity,
+                        'data_type': data_type,
+                        'status': 'FAILED',
+                        'error': str(e)
+                    })
+        
+        # Step 3: Summary
+        log("\n" + "="*70, log_callback)
+        log("TRAINING SUMMARY", log_callback)
+        log("="*70, log_callback)
+        
+        successful = [r for r in results_summary if r['status'] == 'SUCCESS']
+        failed = [r for r in results_summary if r['status'] == 'FAILED']
+        
+        log(f"Total trained: {len(results_summary)}", log_callback)
+        log(f"Successful: {len(successful)}", log_callback)
+        log(f"Failed: {len(failed)}", log_callback)
+        
+        # Save summary to JSON
+        summary_path = f"{active_config['model_dir']}/training_summary.json"
+        
+        # Create output dir if it doesn't exist
+        os.makedirs(active_config['model_dir'], exist_ok=True)
+        
+        with open(summary_path, 'w') as f:
+            json.dump({
+                'timestamp': datetime.now().isoformat(),
+                'config': active_config,
+                'results': results_summary
+            }, f, indent=2)
+        
+        log(f"\nSummary saved to {summary_path}", log_callback)
+        log("Training process completed successfully.", log_callback)
+        
+        return results_summary
         
     except Exception as e:
-        print(f"\n❌ UNEXPECTED ERROR: {str(e)}")
+        log(f"\n❌ FATAL ERROR: {str(e)}", log_callback)
         import traceback
-        traceback.print_exc()
+        log(traceback.format_exc(), log_callback)
+        raise e
 
+def main():
+    start_training()
 
 if __name__ == "__main__":
     main()

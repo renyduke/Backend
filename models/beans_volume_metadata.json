@@ -1,0 +1,36 @@
+{
+  "commodity": "Beans",
+  "data_type": "volume",
+  "training_date": "2026-02-08T16:19:18.049655",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Beans",
+    "data_type": "volume",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 708.0,
+      "max": 31172.0,
+      "mean": 15645.46794081381,
+      "std": 5520.279213541469
+    }
+  },
+  "performance_metrics": {
+    "mse": 40886118.28638232,
+    "rmse": 6394.2253859542925,
+    "mae": 5857.4456787109375,
+    "mape": 48.827997697353986,
+    "accuracy": 51.172002302646014
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

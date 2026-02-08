@@ -1,0 +1,36 @@
+{
+  "commodity": "Radish",
+  "data_type": "volume",
+  "training_date": "2026-02-08T16:19:41.761435",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Radish",
+    "data_type": "volume",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 253.0,
+      "max": 29135.0,
+      "mean": 15481.075215782985,
+      "std": 5656.8383704556845
+    }
+  },
+  "performance_metrics": {
+    "mse": 17629816.43469155,
+    "rmse": 4198.787495776793,
+    "mae": 3679.5821533203125,
+    "mape": 26.80263620476822,
+    "accuracy": 73.19736379523178
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

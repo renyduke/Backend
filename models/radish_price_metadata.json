@@ -1,0 +1,36 @@
+{
+  "commodity": "Radish",
+  "data_type": "price",
+  "training_date": "2026-02-08T16:19:28.058660",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Radish",
+    "data_type": "price",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 42.364999999999995,
+      "max": 168.74,
+      "mean": 105.63481438259646,
+      "std": 16.92738743892491
+    }
+  },
+  "performance_metrics": {
+    "mse": 304.9345493699096,
+    "rmse": 17.462375249945513,
+    "mae": 14.99875463213239,
+    "mape": 12.868694776162032,
+    "accuracy": 87.13130522383797
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

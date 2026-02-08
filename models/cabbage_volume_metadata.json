@@ -1,0 +1,36 @@
+{
+  "commodity": "Cabbage",
+  "data_type": "volume",
+  "training_date": "2026-02-08T16:13:03.283598",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Cabbage",
+    "data_type": "volume",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 355.0,
+      "max": 29168.0,
+      "mean": 15523.271270036992,
+      "std": 5559.808610430067
+    }
+  },
+  "performance_metrics": {
+    "mse": 15772341.733695388,
+    "rmse": 3971.4407629593807,
+    "mae": 3219.2066650390625,
+    "mape": 25.370459371148456,
+    "accuracy": 74.62954062885154
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

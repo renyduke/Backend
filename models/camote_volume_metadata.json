@@ -1,0 +1,36 @@
+{
+  "commodity": "Camote",
+  "data_type": "volume",
+  "training_date": "2026-02-08T16:18:28.614237",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Camote",
+    "data_type": "volume",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 673.0,
+      "max": 28035.0,
+      "mean": 15732.175709001232,
+      "std": 5690.299094601186
+    }
+  },
+  "performance_metrics": {
+    "mse": 15477168.140057921,
+    "rmse": 3934.10321929381,
+    "mae": 3059.0382080078125,
+    "mape": 24.733421042673193,
+    "accuracy": 75.2665789573268
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

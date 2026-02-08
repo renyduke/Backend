@@ -9,12 +9,14 @@ CHANGES FROM ORIGINAL:
 5. Added fallback to database training if pre-trained model unavailable
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, File, UploadFile, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 import pandas as pd
 import os
+import shutil
 import json
+import asyncio
 from supabase import create_client, Client
 
 from .config import settings
@@ -26,6 +28,8 @@ from .models import (
     HealthResponse
 )
 from .lstm_forecaster import LSTMForecaster, calculate_metrics
+from .training_manager import TrainingManager
+from .train_external_data import start_training
 
 # Validate settings
 settings.validate()
@@ -46,11 +50,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi.staticfiles import StaticFiles
+# Create plots directory if not exists
+os.makedirs(settings.PLOT_DIR, exist_ok=True)
+
+# Mount plots directory
+app.mount("/plots", StaticFiles(directory=settings.PLOT_DIR), name="plots")
+
 # Initialize Supabase client
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
 
 # Create models directory
 os.makedirs(settings.MODELS_DIR, exist_ok=True)
+
+# Initialize Training Manager
+training_manager = TrainingManager()
 
 # ============================================================================
 # NEW: GLOBAL MODEL CACHE FOR PRE-TRAINED MODELS
@@ -199,6 +213,102 @@ def fetch_data_from_supabase(commodity: str, data_type: str):
         print(f"Error fetching data: {e}")
         return None
 
+
+# ============================================================================
+# NEW: TRAINING ENDPOINTS
+# ============================================================================
+
+@app.post("/api/upload_dataset", tags=["Training"])
+async def upload_dataset(file: UploadFile = File(...)):
+    """Upload a new dataset for training"""
+    try:
+        if not file.filename.endswith('.csv'):
+            raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+            
+        # Save file to root directory (replacing existing one or creating new)
+        file_path = "vegetable_price_lstm_10000_structured.csv"  # Overwrite main file
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Validate CSV content
+        try:
+            df = pd.read_csv(file_path)
+            
+            # 1. Check required columns
+            required_columns = {'date', 'commodity', 'volume'}
+            price_col = 'price_avg' if 'price_avg' in df.columns else 'price'
+            
+            missing = required_columns - set(df.columns)
+            if missing:
+                os.remove(file_path) # Delete invalid file
+                raise HTTPException(status_code=400, detail=f"Missing columns: {', '.join(missing)}")
+            
+            if price_col not in df.columns:
+                os.remove(file_path)
+                raise HTTPException(status_code=400, detail="Missing price column (need 'price_avg' or 'price')")
+
+            # 2. Check row count
+            if len(df) < 100:
+                os.remove(file_path)
+                raise HTTPException(status_code=400, detail=f"Dataset too small ({len(df)} rows). Need at least 100.")
+
+            # 3. Check Date format (basic check on first row)
+            try:
+                pd.to_datetime(df['date'].iloc[0])
+            except:
+                os.remove(file_path)
+                raise HTTPException(status_code=400, detail="Invalid date format in 'date' column.")
+
+            return {
+                "message": "Dataset uploaded and validated successfully! ✅",
+                "filename": file.filename,
+                "rows": len(df),
+                "commodities": df['commodity'].nunique(),
+                "columns": list(df.columns)
+            }
+            
+        except pd.errors.EmptyDataError:
+            os.remove(file_path)
+            raise HTTPException(status_code=400, detail="Uploaded CSV file is empty")
+        except Exception as validation_error:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            raise HTTPException(status_code=400, detail=f"Validation failed: {str(validation_error)}")
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/start_training", tags=["Training"])
+async def trigger_training(background_tasks: BackgroundTasks):
+    """Start the training process in background"""
+    if training_manager.is_training:
+        raise HTTPException(status_code=400, detail="Training is already in progress")
+        
+    try:
+        # Start training in background thread via manager
+        # We pass the default config, but you could accept config overrides here
+        training_manager.start_training(start_training, None)
+        return {"message": "Training started successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.websocket("/ws/training")
+async def training_websocket(websocket: WebSocket):
+    """WebSocket for streaming training logs"""
+    await training_manager.connect(websocket)
+    try:
+        while True:
+            # Keep connection alive and handle client messages if any
+            # We don't really expect messages from client, but we need to await something
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        training_manager.disconnect(websocket)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        training_manager.disconnect(websocket)
 
 # ============================================================================
 # EXISTING ENDPOINTS (unchanged)

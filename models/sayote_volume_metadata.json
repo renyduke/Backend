@@ -1,0 +1,36 @@
+{
+  "commodity": "Sayote",
+  "data_type": "volume",
+  "training_date": "2026-02-08T16:17:41.171165",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Sayote",
+    "data_type": "volume",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 158.0,
+      "max": 30294.0,
+      "mean": 15560.836004932182,
+      "std": 5588.707421677707
+    }
+  },
+  "performance_metrics": {
+    "mse": 18432068.059571147,
+    "rmse": 4293.258443137467,
+    "mae": 4057.6502685546875,
+    "mape": 25.412120082390548,
+    "accuracy": 74.58787991760946
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

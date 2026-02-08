@@ -1,0 +1,36 @@
+{
+  "commodity": "Squash",
+  "data_type": "volume",
+  "training_date": "2026-02-08T16:17:16.564131",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Squash",
+    "data_type": "volume",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 1187.0,
+      "max": 31541.0,
+      "mean": 15523.5598027127,
+      "std": 5743.922605456286
+    }
+  },
+  "performance_metrics": {
+    "mse": 59814461.94294226,
+    "rmse": 7733.980989305718,
+    "mae": 6344.1136474609375,
+    "mape": 51.26801235011643,
+    "accuracy": 48.73198764988357
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "commodity": "Green_Onion",
+  "data_type": "price",
+  "training_date": "2026-02-08T16:14:25.525904",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Green_Onion",
+    "data_type": "price",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 40.53,
+      "max": 163.23,
+      "mean": 107.06236664024428,
+      "std": 17.16849930501814
+    }
+  },
+  "performance_metrics": {
+    "mse": 74.45483640213764,
+    "rmse": 8.628721597208804,
+    "mae": 6.316230975559781,
+    "mape": 6.132318315963494,
+    "accuracy": 93.86768168403651
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "commodity": "Broccoli",
+  "data_type": "price",
+  "training_date": "2026-02-08T16:17:51.486799",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Broccoli",
+    "data_type": "price",
+    "total_weeks": 1622,
+    "date_range": {
+      "start": "2020-01-01",
+      "end": "2047-05-03"
+    },
+    "statistics": {
+      "min": 39.95,
+      "max": 170.79666666666665,
+      "mean": 106.05139906640832,
+      "std": 16.890718525263374
+    }
+  },
+  "performance_metrics": {
+    "mse": 127.28964627622062,
+    "rmse": 11.282271326121377,
+    "mae": 9.285007177080432,
+    "mape": 9.268746770136872,
+    "accuracy": 90.73125322986313
+  },
+  "training_info": {
+    "train_weeks": 1614,
+    "test_weeks": 8
+  }
+}
