@@ -2,13 +2,11 @@ services:
   - type: web
     name: agridata-backend
     env: python
-    plan: free
-    branch: main
     buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn app.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --timeout 120"
     envVars:
       - key: PYTHON_VERSION
-        value: "3.11.0"
+        value: "3.11.9"
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
