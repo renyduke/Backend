@@ -1,7 +1,7 @@
 {
   "commodity": "Lettuce",
   "data_type": "price",
-  "training_date": "2026-02-08T16:14:46.025487",
+  "training_date": "2026-02-09T15:17:03.946412",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 251.7043567493754,
-    "rmse": 15.865193246518475,
-    "mae": 12.462383962358741,
-    "mape": 12.255158905879407,
-    "accuracy": 87.74484109412059
+    "mse": 257.2662069766965,
+    "rmse": 16.039520160425514,
+    "mae": 12.745400167192726,
+    "mape": 12.461454862870049,
+    "accuracy": 87.53854513712994
   },
   "training_info": {
     "train_weeks": 1614,

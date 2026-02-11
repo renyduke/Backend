@@ -1,7 +1,7 @@
 {
   "commodity": "Cauliflower",
   "data_type": "price",
-  "training_date": "2026-02-08T16:15:51.214923",
+  "training_date": "2026-02-09T15:20:12.537719",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 142.91370920779244,
-    "rmse": 11.954652199365418,
-    "mae": 9.763060547964916,
-    "mape": 9.674029587453784,
-    "accuracy": 90.32597041254621
+    "mse": 144.573925198115,
+    "rmse": 12.02388976987543,
+    "mae": 9.779102303641185,
+    "mape": 9.711972966415326,
+    "accuracy": 90.28802703358467
   },
   "training_info": {
     "train_weeks": 1614,

@@ -1,7 +1,7 @@
 {
   "commodity": "Petchay",
   "data_type": "price",
-  "training_date": "2026-02-08T16:16:18.190657",
+  "training_date": "2026-02-09T15:21:02.122611",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 114.30919832544016,
-    "rmse": 10.691547985462169,
-    "mae": 5.320026533944265,
-    "mape": 4.274544875629681,
-    "accuracy": 95.72545512437031
+    "mse": 106.49692725674949,
+    "rmse": 10.319734844304358,
+    "mae": 5.218623057774135,
+    "mape": 4.222847241416954,
+    "accuracy": 95.77715275858304
   },
   "training_info": {
     "train_weeks": 1614,

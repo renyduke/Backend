@@ -1,7 +1,7 @@
 {
   "commodity": "Cucumber",
   "data_type": "volume",
-  "training_date": "2026-02-08T16:15:42.882302",
+  "training_date": "2026-02-09T15:19:57.841855",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 27699521.78887689,
-    "rmse": 5263.033515842066,
-    "mae": 4283.8331298828125,
-    "mape": 27.620600270990124,
-    "accuracy": 72.37939972900988
+    "mse": 27864632.95652497,
+    "rmse": 5278.696141711982,
+    "mae": 4188.8543701171875,
+    "mape": 26.500714815840453,
+    "accuracy": 73.49928518415955
   },
   "training_info": {
     "train_weeks": 1614,

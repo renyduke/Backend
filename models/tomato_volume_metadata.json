@@ -1,7 +1,7 @@
 {
   "commodity": "Tomato",
   "data_type": "volume",
-  "training_date": "2026-02-08T16:13:24.858487",
+  "training_date": "2026-02-09T15:13:26.191676",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 19062393.71539557,
-    "rmse": 4366.050127448787,
-    "mae": 3753.3680419921875,
-    "mape": 23.271579865450025,
-    "accuracy": 76.72842013454998
+    "mse": 17724264.53545928,
+    "rmse": 4210.019540983068,
+    "mae": 3674.6572265625,
+    "mape": 23.437908680790457,
+    "accuracy": 76.56209131920954
   },
   "training_info": {
     "train_weeks": 1614,

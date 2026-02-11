@@ -1,7 +1,7 @@
 {
   "commodity": "Cabbage",
   "data_type": "price",
-  "training_date": "2026-02-08T17:08:29.379116",
+  "training_date": "2026-02-09T15:12:30.445806",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 250.47738981049787,
-    "rmse": 15.82647749218056,
-    "mae": 13.34851021357945,
-    "mape": 11.952033779319473,
-    "accuracy": 88.04796622068052
+    "mse": 249.9106991291342,
+    "rmse": 15.808564107126687,
+    "mae": 13.237538762773786,
+    "mape": 11.821409502209402,
+    "accuracy": 88.1785904977906
   },
   "training_info": {
     "train_weeks": 1614,

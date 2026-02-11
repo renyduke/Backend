@@ -1,7 +1,7 @@
 {
   "commodity": "Green_Onion",
   "data_type": "volume",
-  "training_date": "2026-02-08T16:14:37.379143",
+  "training_date": "2026-02-09T15:16:39.356348",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 23009385.824349165,
-    "rmse": 4796.809963334921,
-    "mae": 4218.05029296875,
-    "mape": 41.998258105090336,
-    "accuracy": 58.001741894909664
+    "mse": 23169347.759474397,
+    "rmse": 4813.454867293803,
+    "mae": 4218.5355224609375,
+    "mape": 41.59601881068235,
+    "accuracy": 58.40398118931765
   },
   "training_info": {
     "train_weeks": 1614,

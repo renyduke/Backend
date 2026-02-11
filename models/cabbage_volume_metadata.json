@@ -1,7 +1,7 @@
 {
   "commodity": "Cabbage",
   "data_type": "volume",
-  "training_date": "2026-02-08T16:13:03.283598",
+  "training_date": "2026-02-09T15:12:53.275500",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 15772341.733695388,
-    "rmse": 3971.4407629593807,
-    "mae": 3219.2066650390625,
-    "mape": 25.370459371148456,
-    "accuracy": 74.62954062885154
+    "mse": 17387999.046871424,
+    "rmse": 4169.891970647612,
+    "mae": 3365.225830078125,
+    "mape": 27.122313805138205,
+    "accuracy": 72.8776861948618
   },
   "training_info": {
     "train_weeks": 1614,

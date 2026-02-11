@@ -1,7 +1,7 @@
 {
   "commodity": "Carrots",
   "data_type": "price",
-  "training_date": "2026-02-08T16:14:01.790633",
+  "training_date": "2026-02-09T15:14:54.596872",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 544.3759190060301,
-    "rmse": 23.331864884874292,
-    "mae": 17.16840257372175,
-    "mape": 12.95220928461779,
-    "accuracy": 87.0477907153822
+    "mse": 523.0963862482458,
+    "rmse": 22.871300493156173,
+    "mae": 16.95427789415632,
+    "mape": 12.854139593112752,
+    "accuracy": 87.14586040688725
   },
   "training_info": {
     "train_weeks": 1614,

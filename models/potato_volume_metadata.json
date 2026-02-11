@@ -1,7 +1,7 @@
 {
   "commodity": "Potato",
   "data_type": "volume",
-  "training_date": "2026-02-08T16:13:50.890499",
+  "training_date": "2026-02-09T15:14:25.967085",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 28905362.682957053,
-    "rmse": 5376.370772459527,
-    "mae": 4470.1861572265625,
-    "mape": 31.159714222696877,
-    "accuracy": 68.84028577730312
+    "mse": 29363848.019156337,
+    "rmse": 5418.841944470823,
+    "mae": 4518.7940673828125,
+    "mape": 32.92456278922251,
+    "accuracy": 67.0754372107775
   },
   "training_info": {
     "train_weeks": 1614,

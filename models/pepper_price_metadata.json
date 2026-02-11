@@ -1,7 +1,7 @@
 {
   "commodity": "Pepper",
   "data_type": "price",
-  "training_date": "2026-02-08T16:16:41.221424",
+  "training_date": "2026-02-09T15:22:04.744440",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 414.74808489653026,
-    "rmse": 20.3653648358317,
-    "mae": 15.676054910932267,
-    "mape": 18.092975816764977,
-    "accuracy": 81.90702418323502
+    "mse": 412.8297768787025,
+    "rmse": 20.318212935164905,
+    "mae": 15.88893409184047,
+    "mape": 18.270697370260194,
+    "accuracy": 81.7293026297398
   },
   "training_info": {
     "train_weeks": 1614,

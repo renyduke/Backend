@@ -1,7 +1,7 @@
 {
   "commodity": "Squash",
   "data_type": "volume",
-  "training_date": "2026-02-08T16:17:16.564131",
+  "training_date": "2026-02-09T15:23:19.134336",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 59814461.94294226,
-    "rmse": 7733.980989305718,
-    "mae": 6344.1136474609375,
-    "mape": 51.26801235011643,
-    "accuracy": 48.73198764988357
+    "mse": 65419582.06102443,
+    "rmse": 8088.237265376457,
+    "mae": 6522.724853515625,
+    "mape": 56.40110507072797,
+    "accuracy": 43.59889492927203
   },
   "training_info": {
     "train_weeks": 1614,

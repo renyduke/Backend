@@ -1,7 +1,7 @@
 {
   "commodity": "Eggplant",
   "data_type": "volume",
-  "training_date": "2026-02-08T16:15:22.568854",
+  "training_date": "2026-02-09T15:19:37.146446",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 33920110.86578417,
-    "rmse": 5824.097429283285,
-    "mae": 4931.797607421875,
-    "mape": 53.353023970720606,
-    "accuracy": 46.646976029279394
+    "mse": 34520042.716591,
+    "rmse": 5875.375963850399,
+    "mae": 4863.5413818359375,
+    "mape": 54.96404058445178,
+    "accuracy": 45.03595941554822
   },
   "training_info": {
     "train_weeks": 1614,

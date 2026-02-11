@@ -1,7 +1,7 @@
 {
   "commodity": "Sayote",
   "data_type": "volume",
-  "training_date": "2026-02-08T16:17:41.171165",
+  "training_date": "2026-02-09T15:24:12.640289",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
@@ -23,11 +23,11 @@
     }
   },
   "performance_metrics": {
-    "mse": 18432068.059571147,
-    "rmse": 4293.258443137467,
-    "mae": 4057.6502685546875,
-    "mape": 25.412120082390548,
-    "accuracy": 74.58787991760946
+    "mse": 17880596.107253313,
+    "rmse": 4228.54538904968,
+    "mae": 3993.143798828125,
+    "mape": 24.432552450195654,
+    "accuracy": 75.56744754980434
   },
   "training_info": {
     "train_weeks": 1614,
