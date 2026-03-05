@@ -1,0 +1,36 @@
+{
+  "commodity": "Potato",
+  "data_type": "price",
+  "training_date": "2026-02-21T17:52:23.046286",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Potato",
+    "data_type": "price",
+    "total_weeks": 55,
+    "date_range": {
+      "start": "2024-1.0-01",
+      "end": "2024-12.0-04"
+    },
+    "statistics": {
+      "min": 16.5,
+      "max": 115.0,
+      "mean": 81.60909090909091,
+      "std": 16.984335271893897
+    }
+  },
+  "performance_metrics": {
+    "mse": 60.639238525873225,
+    "rmse": 7.7871200405460055,
+    "mae": 6.208741188049316,
+    "mape": 7.049449484332714,
+    "accuracy": 92.95055051566729
+  },
+  "training_info": {
+    "train_weeks": 47,
+    "test_weeks": 8
+  }
+}

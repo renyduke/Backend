@@ -24,7 +24,7 @@ class ForecastRequest(BaseModel):
         return v.strip()
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "commodity": "Cabbage",
                 "data_type": "volume",
@@ -42,7 +42,7 @@ class WeeklyDataPoint(BaseModel):
     value: float = Field(..., description="Value for the period")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "year": 2024,
                 "month": 12,
@@ -66,7 +66,7 @@ class ForecastResponse(BaseModel):
     metrics: dict = Field(..., description="Model performance metrics")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "commodity": "Cabbage",
                 "data_type": "volume",
@@ -108,7 +108,7 @@ class DashboardData(BaseModel):
     period_range: dict = Field(..., description="Range of available periods")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "volume_data": [
                     {
@@ -147,7 +147,7 @@ class CommoditiesResponse(BaseModel):
     commodities: List[str] = Field(..., description="List of available commodities")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "commodities": [
                     "Beans", "Broccoli", "Cabbage", "Camote", "Carrots",
@@ -173,7 +173,7 @@ class StatisticsResponse(BaseModel):
     trend: str = Field(..., description="Current trend: 'increasing' or 'decreasing'")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "commodity": "Cabbage",
                 "data_type": "volume",
@@ -200,7 +200,7 @@ class HealthResponse(BaseModel):
     timestamp: str = Field(..., description="Current timestamp")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "status": "healthy",
                 "timestamp": "2024-12-23T10:30:00"
@@ -224,7 +224,7 @@ class VolumeData(BaseModel):
     encoded_at: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "year": 2024,
                 "month": 12,
@@ -266,7 +266,7 @@ class PriceData(BaseModel):
         return v
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "year": 2024,
                 "month": 12,
@@ -291,7 +291,7 @@ class ErrorResponse(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "detail": "Insufficient data for forecasting",
                 "error_code": "INSUFFICIENT_DATA",

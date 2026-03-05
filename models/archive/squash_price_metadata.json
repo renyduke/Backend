@@ -1,0 +1,36 @@
+{
+  "commodity": "Squash",
+  "data_type": "price",
+  "training_date": "2026-02-21T17:53:30.040474",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Squash",
+    "data_type": "price",
+    "total_weeks": 55,
+    "date_range": {
+      "start": "2024-1.0-01",
+      "end": "2024-12.0-04"
+    },
+    "statistics": {
+      "min": 9.0,
+      "max": 123.5,
+      "mean": 23.831818181818182,
+      "std": 16.573119977394843
+    }
+  },
+  "performance_metrics": {
+    "mse": 6.842080952968104,
+    "rmse": 2.615737171997237,
+    "mae": 1.9787653684616089,
+    "mape": 11.265072193885977,
+    "accuracy": 88.73492780611403
+  },
+  "training_info": {
+    "train_weeks": 47,
+    "test_weeks": 8
+  }
+}

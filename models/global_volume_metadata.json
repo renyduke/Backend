@@ -1,0 +1,36 @@
+{
+  "model_type": "Global",
+  "data_type": "volume",
+  "training_date": "2026-03-05T08:15:53.318946",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly_Global"
+  },
+  "performance_metrics": {
+    "accuracy": 64.05836838505087,
+    "note": "Average accuracy across all commodities"
+  },
+  "data_info": {
+    "commodities_included": [
+      "Cabbage",
+      "Tomato",
+      "Potato",
+      "Carrots",
+      "Green_Onion",
+      "Lettuce",
+      "Eggplant",
+      "Cucumber",
+      "Cauliflower",
+      "Squash",
+      "Sayote",
+      "Broccoli",
+      "Camote",
+      "Ginger",
+      "Radish",
+      "Cabbage",
+      "Tomato",
+      "Potato"
+    ]
+  }
+}

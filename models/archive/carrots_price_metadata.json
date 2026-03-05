@@ -1,0 +1,36 @@
+{
+  "commodity": "Carrots",
+  "data_type": "price",
+  "training_date": "2026-02-21T17:52:30.808848",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Carrots",
+    "data_type": "price",
+    "total_weeks": 55,
+    "date_range": {
+      "start": "2024-1.0-01",
+      "end": "2024-12.0-04"
+    },
+    "statistics": {
+      "min": 25.0,
+      "max": 165.0,
+      "mean": 70.76212121212122,
+      "std": 35.10942281279961
+    }
+  },
+  "performance_metrics": {
+    "mse": 4509.822426110382,
+    "rmse": 67.15521145905493,
+    "mae": 66.21333503723145,
+    "mape": 51.55157019847668,
+    "accuracy": 48.44842980152332
+  },
+  "training_info": {
+    "train_weeks": 47,
+    "test_weeks": 8
+  }
+}

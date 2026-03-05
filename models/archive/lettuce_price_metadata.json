@@ -1,0 +1,36 @@
+{
+  "commodity": "Lettuce",
+  "data_type": "price",
+  "training_date": "2026-02-21T17:52:39.372672",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Lettuce",
+    "data_type": "price",
+    "total_weeks": 55,
+    "date_range": {
+      "start": "2024-1.0-01",
+      "end": "2024-12.0-04"
+    },
+    "statistics": {
+      "min": 27.5,
+      "max": 250.0,
+      "mean": 129.50072727272726,
+      "std": 81.37495611739179
+    }
+  },
+  "performance_metrics": {
+    "mse": 4624.121685567719,
+    "rmse": 68.00089474093498,
+    "mae": 65.88764953613281,
+    "mape": 28.909640150005316,
+    "accuracy": 71.09035984999468
+  },
+  "training_info": {
+    "train_weeks": 47,
+    "test_weeks": 8
+  }
+}

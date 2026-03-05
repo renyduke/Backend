@@ -1,0 +1,36 @@
+{
+  "commodity": "Tomato",
+  "data_type": "price",
+  "training_date": "2026-02-21T17:52:12.317968",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Tomato",
+    "data_type": "price",
+    "total_weeks": 55,
+    "date_range": {
+      "start": "2024-1.0-01",
+      "end": "2024-12.0-04"
+    },
+    "statistics": {
+      "min": 17.5,
+      "max": 155.0,
+      "mean": 57.81818181818182,
+      "std": 31.280892168799035
+    }
+  },
+  "performance_metrics": {
+    "mse": 1724.37608553069,
+    "rmse": 41.52560758773663,
+    "mae": 40.84294128417969,
+    "mape": 40.84292260071143,
+    "accuracy": 59.15707739928857
+  },
+  "training_info": {
+    "train_weeks": 47,
+    "test_weeks": 8
+  }
+}

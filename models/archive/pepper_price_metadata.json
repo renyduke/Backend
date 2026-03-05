@@ -1,0 +1,36 @@
+{
+  "commodity": "Pepper",
+  "data_type": "price",
+  "training_date": "2026-02-21T17:53:18.685157",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Pepper",
+    "data_type": "price",
+    "total_weeks": 55,
+    "date_range": {
+      "start": "2024-1.0-01",
+      "end": "2024-12.0-04"
+    },
+    "statistics": {
+      "min": 43.375,
+      "max": 182.5,
+      "mean": 105.8189393939394,
+      "std": 34.383501903791654
+    }
+  },
+  "performance_metrics": {
+    "mse": 1607.3122476208082,
+    "rmse": 40.09129890164209,
+    "mae": 36.67580604553223,
+    "mape": 24.762752919606427,
+    "accuracy": 75.23724708039357
+  },
+  "training_info": {
+    "train_weeks": 47,
+    "test_weeks": 8
+  }
+}

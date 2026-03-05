@@ -62,37 +62,53 @@ class LSTMForecaster:
     
     def train(self, data, epochs=50, verbose=0):
         """
-        Train the LSTM model on weekly data
-        
-        Args:
-            data: Array of historical values (weekly data points)
-            epochs: Number of training epochs
-            verbose: Training verbosity (0=silent, 1=progress bar, 2=one line per epoch)
-        
-        Returns:
-            Training history
+        Train the LSTM model on weekly data (wrapper around train_multiple)
         """
-        # Normalize data
-        scaled_data = self.scaler.fit_transform(data.reshape(-1, 1))
+        return self.train_multiple([data], epochs=epochs, verbose=verbose)
+
+    def train_multiple(self, data_list, epochs=50, verbose=0):
+        """
+        Train the LSTM model on multiple independent sequences (e.g., different commodities)
+        using a single shared scaler and model weights.
+        """
+        # Filter out sequences that are too short
+        min_seqs_needed = self.sequence_length + 2
+        valid_data = [d for d in data_list if len(d) >= min_seqs_needed]
         
-        # Create sequences
-        X, y = self.create_sequences(scaled_data)
-        
-        # Validation: Need at least 2 sequences for training
-        # With sequence_length=4, need minimum 6 weeks (4 for sequence + 2 for training)
-        min_sequences = 2
-        if len(X) < min_sequences:
+        if not valid_data:
             raise ValueError(
-                f"Insufficient data for training. Need at least {self.sequence_length + min_sequences} weeks. "
-                f"Found: {len(data)} weeks, which creates {len(X)} training sequences."
+                f"Insufficient data for training in all provided sequences. "
+                f"Need at least {min_seqs_needed} weeks per sequence."
             )
+            
+        # Fit scaler on all valid data combined to ensure global scaling
+        all_data = np.concatenate(valid_data).reshape(-1, 1)
+        self.scaler.fit(all_data)
+        
+        X_all, y_all = [], []
+        
+        # Create sequences for each commodity independently so they don't blend
+        for data in valid_data:
+            scaled_data = self.scaler.transform(data.reshape(-1, 1))
+            X, y = self.create_sequences(scaled_data)
+            if len(X) > 0:
+                X_all.append(X)
+                y_all.append(y)
+                
+        if not X_all:
+            raise ValueError("Insufficient sequences generated for training.")
+            
+        # Combine all sequences
+        X = np.concatenate(X_all)
+        y = np.concatenate(y_all)
         
         # Reshape for LSTM [samples, time steps, features]
         X = X.reshape((X.shape[0], X.shape[1], 1))
         
-        # Build model
-        self.model = self.build_model((X.shape[1], 1))
-        
+        # Build model if not already built
+        if self.model is None:
+            self.model = self.build_model((X.shape[1], 1))
+            
         # Early stopping to prevent overfitting
         early_stop = EarlyStopping(
             monitor='loss',
@@ -100,13 +116,13 @@ class LSTMForecaster:
             restore_best_weights=True
         )
         
-        # Train model
+        # Train model on all combined data
         history = self.model.fit(
             X, y,
             epochs=epochs,
             batch_size=max(1, len(X) // 4),  # Dynamic batch size
             verbose=verbose,
-            validation_split=0.1 if len(X) >= 10 else 0,  # Only use validation if enough data
+            validation_split=0.1 if len(X) >= 10 else 0,
             callbacks=[early_stop]
         )
         

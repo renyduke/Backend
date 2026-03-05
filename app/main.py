@@ -12,12 +12,17 @@ CHANGES FROM ORIGINAL:
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, File, UploadFile, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
-import pandas as pd
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+import pandas as pd
 import shutil
 import json
 import asyncio
 from supabase import create_client, Client
+
+import tensorflow as tf
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 from .config import settings
 from .models import (
@@ -96,30 +101,28 @@ async def startup_event():
     for filename in os.listdir(settings.MODELS_DIR):
         if filename.endswith("_model.h5"):
             # Extract commodity and data_type from filename
-            base_name = filename.replace("_model.h5", "")
-            parts = base_name.rsplit("_", 1)
-            
-            if len(parts) == 2:
-                commodity, data_type = parts
-                model_key = f"{commodity}_{data_type}"
+                if not filename.startswith("global_"):
+                    continue
+
+                model_key = filename.replace("_model.h5", "")
                 
                 try:
                     # Load metadata ONLY
-                    metadata_path = os.path.join(settings.MODELS_DIR, f"{base_name}_metadata.json")
+                    metadata_path = os.path.join(settings.MODELS_DIR, f"{model_key}_metadata.json")
                     if os.path.exists(metadata_path):
                         with open(metadata_path, 'r') as f:
                             metadata = json.load(f)
                         MODEL_METADATA[model_key] = metadata
                         found_count += 1
                         
-                        # Show model info
-                        acc = metadata.get('performance_metrics', {}).get('accuracy', 'N/A')
-                        print(f"  ✓ Found {commodity.capitalize():<12} {data_type:<8} (Accuracy: {acc if isinstance(acc, str) else f'{acc:.1f}%'})")
+                        # Show simplified info
+                        type_name = "Price" if "price" in model_key else "Volume"
+                        print(f"  ✓ Found Unified Global {type_name} Model")
                     
                 except Exception as e:
                     print(f"  ✗ Failed to read metadata for {model_key}: {e}")
     
-    print(f"\n✅ Found {found_count} models (will be loaded on demand)")
+    print(f"\n✅ System Ready with {found_count} Unified Global Models")
     print("="*70 + "\n")
 
 
@@ -220,30 +223,23 @@ async def upload_dataset(file: UploadFile = File(...)):
         try:
             df = pd.read_csv(file_path)
             
-            # 1. Check required columns
-            required_columns = {'date', 'commodity', 'volume'}
-            price_col = 'price_avg' if 'price_avg' in df.columns else 'price'
+            # 1. Check required columns for the new weekly format
+            required_columns = {'week', 'year', 'commodity', 'average_price'}
             
             missing = required_columns - set(df.columns)
             if missing:
                 os.remove(file_path) # Delete invalid file
-                raise HTTPException(status_code=400, detail=f"Missing columns: {', '.join(missing)}")
+                raise HTTPException(status_code=400, detail=f"Missing columns: {', '.join(missing)}\nRequired: {', '.join(required_columns)}")
             
-            if price_col not in df.columns:
-                os.remove(file_path)
-                raise HTTPException(status_code=400, detail="Missing price column (need 'price_avg' or 'price')")
-
             # 2. Check row count
             if len(df) < 100:
                 os.remove(file_path)
                 raise HTTPException(status_code=400, detail=f"Dataset too small ({len(df)} rows). Need at least 100.")
 
-            # 3. Check Date format (basic check on first row)
-            try:
-                pd.to_datetime(df['date'].iloc[0])
-            except:
+            # 3. Check data types (basic check)
+            if not pd.api.types.is_numeric_dtype(df['week']) or not pd.api.types.is_numeric_dtype(df['year']):
                 os.remove(file_path)
-                raise HTTPException(status_code=400, detail="Invalid date format in 'date' column.")
+                raise HTTPException(status_code=400, detail="'week' and 'year' must be numeric.")
 
             return {
                 "message": "Dataset uploaded and validated successfully! ✅",
@@ -369,8 +365,8 @@ async def get_dashboard_data():
 async def generate_forecast(request: ForecastRequest):
     """Generate forecast using LSTM for future weeks"""
     try:
-        # Create model key
-        model_key = f"{request.commodity.lower()}_{request.data_type}"
+        # Create model key for the unified global model
+        model_key = f"global_{request.data_type}"
         
         # Check if pre-trained model exists (in cache or on disk)
         use_pretrained = False
@@ -382,25 +378,29 @@ async def generate_forecast(request: ForecastRequest):
         # 2. Check disk if not in cache (Lazy Loading)
         elif model_key in MODEL_METADATA:
             try:
-                print(f"📥 Loading model from disk: {model_key}")
-                model_path = os.path.join(settings.MODELS_DIR, f"{request.commodity.lower()}_{request.data_type}")
+                print(f"📥 Loading global model from disk: {model_key}")
+                model_path = os.path.join(settings.MODELS_DIR, f"global_{request.data_type}")
                 forecaster = LSTMForecaster()
                 forecaster.load_model(model_path)
                 
-                # Cache it (optional: implement LRU eviction later if needed)
+                # Cache it
                 MODEL_CACHE[model_key] = forecaster
                 use_pretrained = True
             except Exception as e:
-                print(f"⚠ Failed to load existing model {model_key}: {e}")
+                print(f"⚠ Failed to load global model {model_key}: {e}")
                 use_pretrained = False
         
         if use_pretrained:
-            print(f"📦 Using pre-trained model: {request.commodity} - {request.data_type}")
+            print(f"📦 Using pre-trained GLOBAL model for: {request.commodity} - {request.data_type}")
             model_metadata = MODEL_METADATA.get(model_key, {})
         else:
-            print(f"🔨 Training new model from database: {request.commodity} - {request.data_type}")
+            print(f"🔨 Global model not found for {request.data_type}.")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Global {request.data_type} model not found. Please upload a dataset and trigger training first."
+            )
         
-        # Fetch historical data from database (needed for both pre-trained and new models)
+        # Fetch historical data from database for the requested commodity
         df = fetch_data_from_supabase(request.commodity, request.data_type)
         
         min_weeks = 8
@@ -412,16 +412,6 @@ async def generate_forecast(request: ForecastRequest):
         
         # Prepare data
         values = df['value'].values
-        
-        # If no pre-trained model, train from database
-        if not use_pretrained:
-            forecaster = LSTMForecaster(sequence_length=4)
-            forecaster.train(values, epochs=50, verbose=0)
-            
-            # Optionally save this model for future use
-            model_path = f"{settings.MODELS_DIR}/{request.commodity.lower()}_{request.data_type}"
-            forecaster.save_model(model_path)
-            print(f"  ✓ Model saved: {model_path}")
         
         # Generate forecasts
         forecast_values = forecaster.forecast(values, request.weeks_ahead)

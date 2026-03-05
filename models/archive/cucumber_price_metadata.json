@@ -1,0 +1,36 @@
+{
+  "commodity": "Cucumber",
+  "data_type": "price",
+  "training_date": "2026-02-21T17:52:57.317698",
+  "model_config": {
+    "sequence_length": 4,
+    "epochs": 100,
+    "architecture": "LSTM_Weekly"
+  },
+  "data_info": {
+    "commodity": "Cucumber",
+    "data_type": "price",
+    "total_weeks": 55,
+    "date_range": {
+      "start": "2024-1.0-01",
+      "end": "2024-12.0-04"
+    },
+    "statistics": {
+      "min": 25.0,
+      "max": 170.0,
+      "mean": 53.99090909090909,
+      "std": 23.212504645143884
+    }
+  },
+  "performance_metrics": {
+    "mse": 546.3766045042303,
+    "rmse": 23.37470009442325,
+    "mae": 20.11841630935669,
+    "mape": 34.19818184693072,
+    "accuracy": 65.80181815306928
+  },
+  "training_info": {
+    "train_weeks": 47,
+    "test_weeks": 8
+  }
+}

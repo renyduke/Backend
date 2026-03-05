@@ -17,8 +17,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import shutil
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 import json
 from datetime import datetime
+import tensorflow as tf
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 try:
     from .lstm_forecaster import LSTMForecaster, calculate_metrics
 except ImportError:
@@ -29,43 +35,38 @@ except ImportError:
 # ============================================================================
 
 CONFIG = {
-    # Path to your downloaded CSV file
-    'csv_path': 'vegetable_price_lstm_10000_structured.csv',  # CHANGE THIS to your file path
-    
-    # Column names in your CSV (adjust based on your dataset)
-    'columns': {
-        'date': 'date',           # Date column name
-        'commodity': 'commodity',  # Commodity/Item column name
-        'volume': 'volume',        # Volume/Quantity column (if available)
-        'price': 'price_avg'       # Price column name
+    # Per-data-type settings
+    'price': {
+        'csv_path': 'data_testing_with_month_int.csv',
+        'columns': {
+            'commodity': 'commodity',
+            'value': 'average_price',
+            'year': 'year',
+            'month': 'month',
+            'week': 'week'
+        }
+    },
+    'volume': {
+        'csv_path': 'app/agricultural_data.csv',
+        'columns': {
+            'commodity': 'Commodity',
+            'value': 'Volume',
+            'date': 'Date'  # Use date string instead of Y/M/W columns
+        }
     },
     
-    # Commodities to train (must match names in your CSV)
+    # Global commodities (can be overridden per-run)
     'commodities': [
-        'Cabbage',
-        'Tomato',
-        'Potato',
-        'Carrots',
-        'Green_Onion',
-        'Lettuce',
-        'Eggplant',
-        'Cucumber',
-        'Cauliflower',
-        'Petchay',
-        'Pepper',
-        'Squash',
-        'Sayote',
-        'Broccoli',
-        'Camote',
-        'Ginger',
-        'Beans',
-        'Radish',
+        'Cabbage', 'Tomato', 'Potato', 'Carrots', 'Green_Onion',
+        'Lettuce', 'Eggplant', 'Cucumber', 'Cauliflower', 'Petchay',
+        'Pepper', 'Squash', 'Sayote', 'Broccoli', 'Camote', 'Ginger',
+        'Beans', 'Radish'
     ],
     
     # Training parameters
-    'sequence_length': 4,  # Number of past weeks to use
-    'epochs': 100,         # Training iterations
-    'test_weeks': 8,       # Weeks to hold out for testing
+    'sequence_length': 4,
+    'epochs': 100,
+    'test_weeks': 8,
     
     # Output directory
     'model_dir': 'models',
@@ -77,88 +78,66 @@ CONFIG = {
 # STEP 1: Data Loading and Preparation
 # ============================================================================
 
-def load_csv_data(csv_path):
+def load_csv_data(csv_path, data_type='price'):
     """Load and display CSV structure"""
     print(f"\n{'='*70}")
-    print("LOADING DATASET")
+    print(f"LOADING {data_type.upper()} DATASET")
     print(f"{'='*70}")
     
     if not os.path.exists(csv_path):
-        raise FileNotFoundError(
-            f"CSV file not found: {csv_path}\n"
-            f"Please download a dataset and update CONFIG['csv_path']"
-        )
+        raise FileNotFoundError(f"CSV file not found: {csv_path}")
     
     df = pd.read_csv(csv_path)
-    
-    print(f"✓ Loaded: {csv_path}")
-    print(f"  Rows: {len(df):,}")
-    print(f"  Columns: {len(df.columns)}")
-    print(f"\nAvailable columns:")
-    for i, col in enumerate(df.columns, 1):
-        print(f"  {i}. {col}")
-    
-    print(f"\nFirst few rows:")
-    print(df.head())
-    
-    print(f"\nUnique commodities found:")
-    commodity_col = CONFIG['columns']['commodity']
-    if commodity_col in df.columns:
-        commodities = df[commodity_col].unique()
-        for i, comm in enumerate(sorted(commodities), 1):
-            count = len(df[df[commodity_col] == comm])
-            print(f"  {i}. {comm} ({count} records)")
+    print(f"✓ Loaded: {csv_path} ({len(df):,} rows)")
     
     return df
 
 
 def convert_to_weekly_data(df, commodity_name, value_type='volume'):
     """
-    Convert dataset to weekly format matching your system structure
-    
-    Args:
-        df: DataFrame with raw data
-        commodity_name: Name of commodity to filter
-        value_type: 'volume' or 'price'
-    
-    Returns:
-        Dictionary with weekly data and metadata
+    Convert dataset to weekly format matching your system structure.
+    Now supports both explicit Y/M/W columns and Date string columns.
     """
     print(f"\n{'='*70}")
     print(f"PROCESSING: {commodity_name} - {value_type.upper()}")
     print(f"{'='*70}")
     
-    # Get column names from config
-    date_col = CONFIG['columns']['date']
-    commodity_col = CONFIG['columns']['commodity']
+    # Get configuration for specific data type
+    type_config = CONFIG.get(value_type, {})
+    col_map = type_config.get('columns', {})
     
-    if value_type == 'volume':
-        value_col = CONFIG['columns']['volume']
-    else:
-        value_col = CONFIG['columns']['price']
+    commodity_col = col_map.get('commodity', 'commodity')
+    value_col = col_map.get('value', 'value')
     
     # Filter for specific commodity
+    # Standardize commodity names for search (handle underscores/spaces)
+    search_name = commodity_name.replace('_', ' ')
     df_filtered = df[
-        df[commodity_col].str.contains(commodity_name, case=False, na=False)
+        df[commodity_col].astype(str).str.contains(search_name, case=False, na=False) |
+        df[commodity_col].astype(str).str.contains(commodity_name, case=False, na=False)
     ].copy()
     
     if len(df_filtered) == 0:
-        raise ValueError(f"No data found for commodity: {commodity_name}")
+        raise ValueError(f"No data found for commodity: {search_name}")
     
     print(f"  Found {len(df_filtered)} records")
     
-    # Convert to datetime
-    df_filtered['Date'] = pd.to_datetime(df_filtered[date_col], errors='coerce')
-    df_filtered = df_filtered.dropna(subset=['Date'])
+    # Handle Date Parsing if Y/M/W columns are missing
+    if 'date' in col_map and col_map['date'] in df_filtered.columns:
+        date_col = col_map['date']
+        df_filtered[date_col] = pd.to_datetime(df_filtered[date_col])
+        df_filtered['Year'] = df_filtered[date_col].dt.year
+        df_filtered['Month'] = df_filtered[date_col].dt.month
+        # Logic for Week of Month (1-5)
+        df_filtered['Week'] = df_filtered[date_col].dt.day.apply(lambda d: min(5, (d - 1) // 7 + 1))
+    else:
+        # Use explicit mapping
+        df_filtered['Year'] = df_filtered[col_map.get('year', 'year')]
+        df_filtered['Month'] = df_filtered[col_map.get('month', 'month')]
+        df_filtered['Week'] = df_filtered[col_map.get('week', 'week')]
     
-    # Extract time components
-    df_filtered['Year'] = df_filtered['Date'].dt.year
-    df_filtered['Month'] = df_filtered['Date'].dt.month
-    df_filtered['Day'] = df_filtered['Date'].dt.day
-    
-    # Calculate week of month (1-5)
-    df_filtered['Week'] = ((df_filtered['Day'] - 1) // 7) + 1
-    df_filtered['Week'] = df_filtered['Week'].clip(upper=5)
+    # Drop rows with missing essential data
+    df_filtered = df_filtered.dropna(subset=['Year', 'Month', 'Week', value_col])
     
     # Aggregate to weekly data
     aggregation = 'mean' if value_type == 'price' else 'sum'
@@ -171,7 +150,7 @@ def convert_to_weekly_data(df, commodity_name, value_type='volume'):
     weekly_data = weekly_data.sort_values(['Year', 'Month', 'Week'])
     weekly_data = weekly_data.reset_index(drop=True)
     
-    # Create period labels
+    # Create period labels (YYYY-MM-WW)
     weekly_data['period'] = (
         weekly_data['Year'].astype(str) + '-' + 
         weekly_data['Month'].astype(str).str.zfill(2) + '-' + 
@@ -183,8 +162,6 @@ def convert_to_weekly_data(df, commodity_name, value_type='volume'):
     print(f"  Converted to {len(weekly_data)} weekly data points")
     print(f"  Date range: {weekly_data.iloc[0]['period']} to {weekly_data.iloc[-1]['period']}")
     print(f"  Value range: {values.min():.2f} to {values.max():.2f}")
-    print(f"  Mean value: {values.mean():.2f}")
-    print(f"  Std deviation: {values.std():.2f}")
     
     return {
         'values': values,
@@ -388,25 +365,31 @@ def save_model_and_metadata(results, data_dict, commodity_name, data_type):
 # STEP 5: Batch Training for Multiple Commodities
 # ============================================================================
 
-def batch_train_all_commodities(df):
-    """Train models for all configured commodities"""
+def batch_train_all_commodities():
+    """Train models for all configured commodities across all data types"""
     
     print(f"\n{'='*70}")
     print("BATCH TRAINING - ALL COMMODITIES")
     print(f"{'='*70}")
-    print(f"Commodities to train: {len(CONFIG['commodities'])}")
-    print(f"Data types: volume, price")
-    print(f"Total models to train: {len(CONFIG['commodities']) * 2}")
     
     results_summary = []
     
-    for i, commodity in enumerate(CONFIG['commodities'], 1):
-        print(f"\n\n{'#'*70}")
-        print(f"COMMODITY {i}/{len(CONFIG['commodities'])}: {commodity}")
-        print(f"{'#'*70}")
+    for data_type in ['price', 'volume']:
+        type_config = CONFIG.get(data_type)
+        if not type_config:
+            continue
+            
+        csv_path = type_config['csv_path']
+        if not os.path.exists(csv_path):
+            print(f"Skipping {data_type}: CSV not found at {csv_path}")
+            continue
+            
+        print(f"\nLoading {data_type.upper()} dataset: {csv_path}")
+        df = pd.read_csv(csv_path)
         
-        # Train for both volume and price
-        for data_type in [ 'price','volume']:
+        for i, commodity in enumerate(CONFIG['commodities'], 1):
+            print(f"\n--- {data_type.upper()} | {commodity} ({i}/{len(CONFIG['commodities'])}) ---")
+            
             try:
                 # Prepare data
                 data_dict = convert_to_weekly_data(df, commodity, data_type)
@@ -431,13 +414,10 @@ def batch_train_all_commodities(df):
                     'mae': train_results['metrics']['mae'],
                     'weeks_trained': len(data_dict['values'])
                 })
-                
-                print(f"\n✅ SUCCESS: {commodity} - {data_type}")
+                print(f"✅ SUCCESS")
                 
             except Exception as e:
-                print(f"\n❌ FAILED: {commodity} - {data_type}")
-                print(f"   Error: {str(e)}")
-                
+                print(f"❌ FAILED: {str(e)}")
                 results_summary.append({
                     'commodity': commodity,
                     'data_type': data_type,
@@ -504,6 +484,25 @@ def log(message, callback=None):
     else:
         print(message)
 
+def archive_old_models(model_dir):
+    """Move non-global models to an archive folder"""
+    archive_dir = os.path.join(model_dir, 'archive')
+    os.makedirs(archive_dir, exist_ok=True)
+    
+    for filename in os.listdir(model_dir):
+        if filename == 'archive' or filename == 'training_summary.json':
+            continue
+            
+        if not filename.startswith('global_'):
+            src = os.path.join(model_dir, filename)
+            dst = os.path.join(archive_dir, filename)
+            try:
+                if os.path.exists(dst):
+                    os.remove(dst)
+                shutil.move(src, dst)
+            except Exception as e:
+                print(f"Warning: Could not archive {filename}: {e}")
+
 def start_training(config=None, log_callback=None):
     """
     Start the training process with optional config override and log callback.
@@ -525,78 +524,135 @@ def start_training(config=None, log_callback=None):
     log("="*70, log_callback)
     
     try:
-        log(f"Starting training with config: {active_config.get('csv_path', 'default')}", log_callback)
+        log(f"Starting unified training flow...", log_callback)
         
-        # Step 1: Load dataset
-        # We need to modify helper functions to use the logger, 
-        # but for now we'll just redirect their stdout if possible or accept they print to console
-        # A better approach is to pass the logger down, but that requires rewriting all functions.
-        # For this implementation, we will assume helper functions print to console, 
-        # and we will log major steps here.
-        
-        # Reloading data with new path if specified
-        csv_path = active_config['csv_path']
-        if not os.path.exists(csv_path):
-             raise FileNotFoundError(f"CSV file not found: {csv_path}")
-
-        log(f"Loading dataset from {csv_path}...", log_callback)
-        df = pd.read_csv(csv_path)
-        log(f"Dataset loaded: {len(df)} rows", log_callback)
-        
-        # Step 2: Batch train all commodities
-        # We'll reimplement the loop here to log progress
-        log("\n" + "="*70, log_callback)
-        log("BATCH TRAINING - ALL COMMODITIES", log_callback)
-        log("="*70, log_callback)
-        
-        commodities = active_config['commodities']
         results_summary = []
-        
-        total_steps = len(commodities) * 2
-        current_step = 0
-        
-        for i, commodity in enumerate(commodities, 1):
-            log(f"\nProcessing Commodity {i}/{len(commodities)}: {commodity}", log_callback)
+        global_commodities = active_config.get('commodities', [])
+
+        for data_type in ['price', 'volume']:
+            log(f"\nProcessing {data_type.upper()}...", log_callback)
             
-            for data_type in ['price', 'volume']:
-                current_step += 1
+            # Load dataset for this specific data type
+            type_config = active_config.get(data_type, {})
+            csv_path = type_config.get('csv_path')
+            col_map = type_config.get('columns', {})
+            
+            if not csv_path or not os.path.exists(csv_path):
+                 log(f"  ✗ CSV for {data_type} not found: {csv_path}", log_callback)
+                 continue
+
+            log(f"  Loading dataset: {csv_path}...", log_callback)
+            df = pd.read_csv(csv_path)
+            
+            commodity_col = col_map.get('commodity', 'commodity')
+            
+            all_train_data = []
+            test_data_dict = {}
+            data_dicts = {}
+            
+            # Filter global commodities to only those present in THIS dataset
+            available_in_csv = df[commodity_col].unique() if commodity_col in df.columns else []
+            
+            for i, commodity in enumerate(global_commodities, 1):
                 try:
-                    log(f"  Training {commodity} - {data_type} ({current_step}/{total_steps})...", log_callback)
+                    # Robust commodity search (handle underscores vs spaces)
+                    search_name = commodity.replace('_', ' ')
                     
+                    found_match = any(c.lower() == search_name.lower() or c.lower() == commodity.lower() 
+                                    for c in available_in_csv)
+                                    
+                    if not found_match:
+                        continue
+
                     # Prepare data
                     data_dict = convert_to_weekly_data(df, commodity, data_type)
+                    values = data_dict['values']
                     
-                    # Train model
-                    train_results = train_lstm_model(data_dict, commodity, data_type)
+                    # More adaptive data requirements for smaller datasets
+                    test_weeks = active_config['test_weeks']
+                    seq_len = active_config['sequence_length']
                     
-                    # Create visualizations
-                    create_visualizations(train_results, data_dict, commodity, data_type)
+                    # If dataset is too small, reduce requirements
+                    if len(values) < (seq_len + test_weeks + 2):
+                        test_weeks = max(2, len(values) // 4)
+                        seq_len = min(seq_len, len(values) - test_weeks - 2)
+                        
+                    if len(values) >= (seq_len + test_weeks + 2):
+                        train_data = values[:-test_weeks]
+                        test_data = values[-test_weeks:]
+                        
+                        all_train_data.append(train_data)
+                        test_data_dict[commodity] = {
+                            'test_data': test_data,
+                            'train_data': train_data,
+                            'test_weeks': test_weeks
+                        }
+                        data_dicts[commodity] = data_dict
+                        log(f"  ✓ Added data for {commodity} ({len(train_data)} train weeks)", log_callback)
+                except Exception as e:
+                    log(f"  ✗ Unexpected error for {commodity}: {str(e)}", log_callback)
+            
+            if not all_train_data:
+                log(f"  ⚠ No valid data found for {data_type.upper()}. Skipping model generation.", log_callback)
+                continue
+                
+            log(f"\nTraining unified GLOBAL {data_type.upper()} model...", log_callback)
+            forecaster = LSTMForecaster(sequence_length=active_config['sequence_length'])
+            
+            try:
+                history = forecaster.train_multiple(all_train_data, epochs=active_config['epochs'], verbose=1)
+                log(f"✓ Global {data_type} model trained successfully.", log_callback)
+            except Exception as e:
+                log(f"❌ Failed to train global {data_type} model: {e}", log_callback)
+                continue
+            
+            # Save the global model
+            os.makedirs(active_config['model_dir'], exist_ok=True)
+            global_model_path = f"{active_config['model_dir']}/global_{data_type}"
+            forecaster.save_model(global_model_path)
+            
+            # Evaluate
+            log(f"\nEvaluating global {data_type} model...", log_callback)
+            for commodity, eval_data in test_data_dict.items():
+                try:
+                    pats = forecaster.forecast(eval_data['train_data'], weeks_ahead=len(eval_data['test_data']))
+                    metrics = calculate_metrics(eval_data['test_data'], pats)
                     
-                    # Save model
-                    save_model_and_metadata(train_results, data_dict, commodity, data_type)
-                    
-                    # Record success
                     results_summary.append({
                         'commodity': commodity,
                         'data_type': data_type,
                         'status': 'SUCCESS',
-                        'accuracy': train_results['metrics']['accuracy'],
-                        'mae': train_results['metrics']['mae'],
-                        'weeks_trained': len(data_dict['values'])
+                        'accuracy': metrics['accuracy'],
+                        'mae': metrics['mae'],
+                        'weeks_trained': len(data_dicts[commodity]['values'])
                     })
+                except Exception:
+                    pass
                     
-                    log(f"  ✅ SUCCESS: {commodity} - {data_type} (Acc: {train_results['metrics']['accuracy']:.2f}%)", log_callback)
-                    
-                except Exception as e:
-                    log(f"  ❌ FAILED: {commodity} - {data_type}", log_callback)
-                    log(f"     Error: {str(e)}", log_callback)
-                    
-                    results_summary.append({
-                        'commodity': commodity,
-                        'data_type': data_type,
-                        'status': 'FAILED',
-                        'error': str(e)
-                    })
+            # Save global metadata
+            avg_acc = np.mean([r['accuracy'] for r in results_summary if r['status'] == 'SUCCESS'] or [0])
+            metadata = {
+                'model_type': 'Global',
+                'data_type': data_type,
+                'training_date': datetime.now().isoformat(),
+                'model_config': {
+                    'sequence_length': active_config['sequence_length'],
+                    'epochs': active_config['epochs'],
+                    'architecture': 'LSTM_Weekly_Global'
+                },
+                'performance_metrics': {
+                    'accuracy': float(avg_acc),
+                    'note': 'Average accuracy across all commodities'
+                },
+                'data_info': {
+                    'commodities_included': [r['commodity'] for r in results_summary if r['status'] == 'SUCCESS']
+                }
+            }
+            with open(f"{global_model_path}_metadata.json", 'w') as f:
+                json.dump(metadata, f, indent=2)
+                
+            log(f"\n✓ Global Model saved: {global_model_path}_model.h5", log_callback)
+            log(f"✓ Global Metadata saved: {global_model_path}_metadata.json", log_callback)
         
         # Step 3: Summary
         log("\n" + "="*70, log_callback)
@@ -624,7 +680,16 @@ def start_training(config=None, log_callback=None):
             }, f, indent=2)
         
         log(f"\nSummary saved to {summary_path}", log_callback)
-        log("Training process completed successfully.", log_callback)
+        
+        # New Step: Archive redundant individual models
+        log("\n" + "="*70, log_callback)
+        log("CLEANING UP REDUNDANT MODELS", log_callback)
+        log("="*70, log_callback)
+        log("Archiving individual per-commodity models...", log_callback)
+        archive_old_models(active_config['model_dir'])
+        log("✓ Redundant models moved to 'models/archive/'.", log_callback)
+        
+        log("\nTraining process completed successfully.", log_callback)
         
         return results_summary
         
