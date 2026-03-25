@@ -143,6 +143,15 @@ def get_week_label(week: int) -> str:
     return labels.get(week, f"Week {week}")
 
 
+def normalize_commodity_name(name: str) -> str:
+    """Normalize commodity names to handle duplicates/typos (e.g., Cauli-flower -> Cauliflower)"""
+    if not name:
+        return name
+    # Handle specific known duplicate "Cauli-flower"
+    normalized = name.replace("Cauli-flower", "Cauliflower")
+    return normalized
+
+
 def increment_week(year: int, month: int, week: int) -> tuple:
     """Increment week and handle month/year transitions"""
     week += 1
@@ -327,18 +336,19 @@ async def get_dashboard_data():
             .execute()
         price_data = price_response.data
         
-        # Get unique commodities
-        commodities = list(set([item['commodity'] for item in volume_data + price_data]))
-        commodities.sort()
-        
-        # Format data with period information
+        # Format data with period information and normalize commodity names
         for item in volume_data:
+            item['commodity'] = normalize_commodity_name(item['commodity'])
             item['period'] = create_period_key(item['year'], item['month'], item['week'])
             item['week_label'] = get_week_label(item['week'])
         
         for item in price_data:
+            item['commodity'] = normalize_commodity_name(item['commodity'])
             item['period'] = create_period_key(item['year'], item['month'], item['week'])
             item['week_label'] = get_week_label(item['week'])
+        
+        # Get unique commodities (after normalization)
+        commodities = sorted(list(set([item['commodity'] for item in volume_data + price_data])))
         
         # Get period range
         all_periods = [item['period'] for item in volume_data + price_data]
@@ -365,53 +375,65 @@ async def get_dashboard_data():
 async def generate_forecast(request: ForecastRequest):
     """Generate forecast using LSTM for future weeks"""
     try:
+        # Fetch historical data from database for the requested commodity
+        df = fetch_data_from_supabase(request.commodity, request.data_type)
+        
         # Create model key for the unified global model
         model_key = f"global_{request.data_type}"
+        local_model_key = f"local_{request.commodity}_{request.data_type}".lower().replace(" ", "_")
         
         # Check if pre-trained model exists (in cache or on disk)
         use_pretrained = False
+        model_metadata = {}
         
         # 1. Check cache first
         if model_key in MODEL_CACHE:
             use_pretrained = True
             forecaster = MODEL_CACHE[model_key]
-        # 2. Check disk if not in cache (Lazy Loading)
-        elif model_key in MODEL_METADATA:
-            try:
-                print(f"📥 Loading global model from disk: {model_key}")
-                model_path = os.path.join(settings.MODELS_DIR, f"global_{request.data_type}")
-                forecaster = LSTMForecaster()
-                forecaster.load_model(model_path)
-                
-                # Cache it
-                MODEL_CACHE[model_key] = forecaster
-                use_pretrained = True
-            except Exception as e:
-                print(f"⚠ Failed to load global model {model_key}: {e}")
-                use_pretrained = False
-        
-        if use_pretrained:
-            print(f"📦 Using pre-trained GLOBAL model for: {request.commodity} - {request.data_type}")
-            model_metadata = MODEL_METADATA.get(model_key, {})
+        # 2. Check disk if not in cache (Lazy Loading & Dynamic Loading)
         else:
-            print(f"🔨 Global model not found for {request.data_type}.")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Global {request.data_type} model not found. Please upload a dataset and trigger training first."
-            )
+            model_path_base = os.path.join(settings.MODELS_DIR, model_key)
+            if os.path.exists(f"{model_path_base}_model.h5"):
+                try:
+                    print(f"?? Loading global model from disk dynamically: {model_key}")
+                    forecaster = LSTMForecaster()
+                    forecaster.load_model(model_path_base)
+                    
+                    # Cache it
+                    MODEL_CACHE[model_key] = forecaster
+                    
+                    # Also load metadata if exists to keep it updated
+                    metadata_path = f"{model_path_base}_metadata.json"
+                    if os.path.exists(metadata_path):
+                        with open(metadata_path, 'r') as f:
+                            MODEL_METADATA[model_key] = json.load(f)
+                            
+                    use_pretrained = True
+                except Exception as e:
+                    print(f"? Failed to load global model {model_key}: {e}")
+                    use_pretrained = False
         
-        # Fetch historical data from database for the requested commodity
-        df = fetch_data_from_supabase(request.commodity, request.data_type)
+        # Minimum weeks logic: Since a global model is trained, we only need `sequence_length` (4 weeks) as baseline input.
+        # If no global model exists, we need 8 weeks to train a new local model on the fly.
+        min_weeks = forecaster.sequence_length if use_pretrained else 8
         
-        min_weeks = 8
         if df is None or len(df) < min_weeks:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Insufficient data for forecasting. Need at least {min_weeks} weeks. Found: {len(df) if df is not None else 0}"
-            )
-        
+            msg = (f"Insufficient historical data in Supabase database for '{request.commodity}'. "
+                   f"The Global AI Model is loaded, but it requires at least the most recent {min_weeks} weeks of data "
+                   f"as a starting point to generate future forecasts. Found: {len(df) if df is not None else 0}")
+            raise HTTPException(status_code=400, detail=msg)
+            
         # Prepare data
         values = df['value'].values
+        
+        if use_pretrained:
+            print(f"?? Using pre-trained GLOBAL model for: {request.commodity} - {request.data_type}")
+            model_metadata = MODEL_METADATA.get(model_key, {})
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Global {request.data_type} model not found. Please upload a dataset and trigger training first."
+            )
         
         # Generate forecasts
         forecast_values = forecaster.forecast(values, request.weeks_ahead)
@@ -502,6 +524,19 @@ async def get_model_info():
     """Get information about loaded pre-trained models"""
     models_info = []
     
+    # Refresh metadata dynamically by scanning the disk for newly trained models
+    if os.path.exists(settings.MODELS_DIR):
+        for filename in os.listdir(settings.MODELS_DIR):
+            if filename.endswith("_model.h5") and filename.startswith("global_"):
+                model_key = filename.replace("_model.h5", "")
+                metadata_path = os.path.join(settings.MODELS_DIR, f"{model_key}_metadata.json")
+                if os.path.exists(metadata_path):
+                    try:
+                        with open(metadata_path, 'r') as f:
+                            MODEL_METADATA[model_key] = json.load(f)
+                    except Exception as e:
+                        print(f"⚠ Failed to read dynamic metadata for {model_key}: {e}")
+    
     for model_key, metadata in MODEL_METADATA.items():
         commodity, data_type = model_key.rsplit('_', 1)
         
@@ -536,9 +571,9 @@ async def get_commodities():
         
         commodities = set()
         for item in volume_response.data:
-            commodities.add(item['commodity'])
+            commodities.add(normalize_commodity_name(item['commodity']))
         for item in price_response.data:
-            commodities.add(item['commodity'])
+            commodities.add(normalize_commodity_name(item['commodity']))
         
         return {"commodities": sorted(list(commodities))}
     except Exception as e:

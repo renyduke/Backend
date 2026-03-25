@@ -15,8 +15,7 @@ __pycache__/
 .env.local
 
 # Models
-models/*.h5
-models/*.pkl
+
 
 # IDE
 .vscode/

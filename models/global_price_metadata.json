@@ -1,14 +1,14 @@
 {
   "model_type": "Global",
   "data_type": "price",
-  "training_date": "2026-03-12T09:25:55.421276",
+  "training_date": "2026-03-12T14:12:53.171515",
   "model_config": {
     "sequence_length": 4,
     "epochs": 100,
     "architecture": "LSTM_Weekly_Global"
   },
   "performance_metrics": {
-    "accuracy": 62.481925148781755,
+    "accuracy": 48.810700388220674,
     "note": "Average accuracy across all commodities"
   },
   "data_info": {
