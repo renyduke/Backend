@@ -11,3 +11,7 @@ services:
         sync: false
       - key: SUPABASE_KEY
         sync: false
+      - key: MODELS_DIR
+        value: "./models"
+      - key: PLOT_DIR
+        value: "./plots"

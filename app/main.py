@@ -143,6 +143,45 @@ def get_week_label(week: int) -> str:
     return labels.get(week, f"Week {week}")
 
 
+def fetch_all_supabase_data(table_name: str, select_cols: str = '*', eq_col: str = None, eq_val: str = None, order_cols: list = None):
+    """Fetch all rows from a Supabase table using pagination to bypass max-rows limit."""
+    # First get the exact total count
+    count_query = supabase.table(table_name).select(select_cols, count='exact').limit(1)
+    if eq_col and eq_val is not None:
+        count_query = count_query.eq(eq_col, eq_val)
+    count_response = count_query.execute()
+    total_count = count_response.count
+    print(f"[PAGINATION] {table_name}: total_count={total_count}")
+
+    if not total_count:
+        return []
+
+    all_data = []
+    page_size = 500  # Use smaller page size to avoid Supabase per-request cap
+    offset = 0
+
+    while offset < total_count:
+        query = supabase.table(table_name).select(select_cols)
+        if eq_col and eq_val is not None:
+            query = query.eq(eq_col, eq_val)
+        if order_cols:
+            for col in order_cols:
+                query = query.order(col)
+
+        response = query.range(offset, offset + page_size - 1).execute()
+        data = response.data
+        print(f"[PAGINATION] {table_name}: offset={offset}, got={len(data)} rows")
+
+        if not data:
+            break
+
+        all_data.extend(data)
+        offset += len(data)
+
+    print(f"[PAGINATION] {table_name}: total fetched={len(all_data)}")
+    return all_data
+
+
 def normalize_commodity_name(name: str) -> str:
     """Normalize commodity names to handle duplicates/typos (e.g., Cauli-flower -> Cauliflower)"""
     if not name:
@@ -172,26 +211,15 @@ def create_period_key(year: int, month: int, week: int) -> str:
 def fetch_data_from_supabase(commodity: str, data_type: str):
     """Fetch historical weekly data from Supabase"""
     try:
+        order_columns = ['year', 'month', 'week']
         if data_type == 'volume':
-            response = supabase.table('agri_volume')\
-                .select('*')\
-                .eq('commodity', commodity)\
-                .order('year')\
-                .order('month')\
-                .order('week')\
-                .execute()
-            df = pd.DataFrame(response.data)
+            data = fetch_all_supabase_data('agri_volume', eq_col='commodity', eq_val=commodity, order_cols=order_columns)
+            df = pd.DataFrame(data)
             if not df.empty:
                 df['value'] = df['volume']
         else:  # price
-            response = supabase.table('agri_price')\
-                .select('*')\
-                .eq('commodity', commodity)\
-                .order('year')\
-                .order('month')\
-                .order('week')\
-                .execute()
-            df = pd.DataFrame(response.data)
+            data = fetch_all_supabase_data('agri_price', eq_col='commodity', eq_val=commodity, order_cols=order_columns)
+            df = pd.DataFrame(data)
             if not df.empty:
                 df['value'] = df['average_price']
         
@@ -314,27 +342,66 @@ def root():
     }
 
 
+@app.get("/api/debug/models", tags=["Debug"])
+async def debug_models():
+    """Debug: show resolved paths and what model files exist"""
+    import glob
+    models_dir = settings.MODELS_DIR
+    base_dir = settings.BASE_DIR
+    cwd = os.getcwd()
+
+    h5_files = glob.glob(os.path.join(models_dir, "*.h5"))
+    pkl_files = glob.glob(os.path.join(models_dir, "*.pkl"))
+    json_files = glob.glob(os.path.join(models_dir, "*.json"))
+
+    return {
+        "cwd": cwd,
+        "base_dir": base_dir,
+        "models_dir": models_dir,
+        "models_dir_exists": os.path.exists(models_dir),
+        "h5_files": [os.path.basename(f) for f in h5_files],
+        "pkl_files": [os.path.basename(f) for f in pkl_files],
+        "json_files": [os.path.basename(f) for f in json_files],
+        "model_cache_keys": list(MODEL_CACHE.keys()),
+        "model_metadata_keys": list(MODEL_METADATA.keys()),
+    }
+
+
+
+async def debug_counts():
+    """Debug endpoint: check total row counts and year range in Supabase tables"""
+    try:
+        price_all = fetch_all_supabase_data('agri_price', select_cols='year')
+        volume_all = fetch_all_supabase_data('agri_volume', select_cols='year')
+
+        price_years = sorted(set(r['year'] for r in price_all)) if price_all else []
+        volume_years = sorted(set(r['year'] for r in volume_all)) if volume_all else []
+
+        return {
+            "agri_price": {
+                "total_fetched": len(price_all),
+                "years": price_years,
+            },
+            "agri_volume": {
+                "total_fetched": len(volume_all),
+                "years": volume_years,
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/dashboard", response_model=DashboardData, tags=["Dashboard"])
 async def get_dashboard_data():
     """Get all data for dashboard"""
     try:
-        # Fetch volume data
-        volume_response = supabase.table('agri_volume')\
-            .select('*')\
-            .order('year')\
-            .order('month')\
-            .order('week')\
-            .execute()
-        volume_data = volume_response.data
+        order_columns = ['year', 'month', 'week']
         
-        # Fetch price data
-        price_response = supabase.table('agri_price')\
-            .select('*')\
-            .order('year')\
-            .order('month')\
-            .order('week')\
-            .execute()
-        price_data = price_response.data
+        # Fetch volume data using pagination helper
+        volume_data = fetch_all_supabase_data('agri_volume', order_cols=order_columns)
+        
+        # Fetch price data using pagination helper
+        price_data = fetch_all_supabase_data('agri_price', order_cols=order_columns)
         
         # Format data with period information and normalize commodity names
         for item in volume_data:
@@ -566,13 +633,13 @@ async def get_model_info():
 async def get_commodities():
     """Get list of available commodities"""
     try:
-        volume_response = supabase.table('agri_volume').select('commodity').execute()
-        price_response = supabase.table('agri_price').select('commodity').execute()
+        volume_data = fetch_all_supabase_data('agri_volume', select_cols='commodity')
+        price_data = fetch_all_supabase_data('agri_price', select_cols='commodity')
         
         commodities = set()
-        for item in volume_response.data:
+        for item in volume_data:
             commodities.add(normalize_commodity_name(item['commodity']))
-        for item in price_response.data:
+        for item in price_data:
             commodities.add(normalize_commodity_name(item['commodity']))
         
         return {"commodities": sorted(list(commodities))}
@@ -616,6 +683,55 @@ async def get_statistics(commodity: str, data_type: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ============================================================================
+# NEW: COMMODITY MANAGEMENT ENDPOINTS
+# ============================================================================
+
+@app.put("/api/commodities/{old_name}", tags=["Commodity Management"])
+async def rename_commodity(old_name: str, payload: dict):
+    """Rename a commodity across all data tables"""
+    new_name = payload.get("new_name")
+    if not new_name:
+        raise HTTPException(status_code=400, detail="New name is required")
+    
+    try:
+        # Update in agri_price table
+        supabase.table('agri_price')\
+            .update({'commodity': new_name})\
+            .eq('commodity', old_name)\
+            .execute()
+            
+        # Update in agri_volume table
+        supabase.table('agri_volume')\
+            .update({'commodity': new_name})\
+            .eq('commodity', old_name)\
+            .execute()
+            
+        return {"message": f"Successfully renamed '{old_name}' to '{new_name}'"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error renaming commodity: {str(e)}")
+
+
+@app.delete("/api/commodities/{commodity_name}", tags=["Commodity Management"])
+async def delete_commodity(commodity_name: str):
+    """Delete all records associated with a commodity from all data tables"""
+    try:
+        # Delete from agri_price table
+        supabase.table('agri_price')\
+            .delete()\
+            .eq('commodity', commodity_name)\
+            .execute()
+            
+        # Delete from agri_volume table
+        supabase.table('agri_volume')\
+            .delete()\
+            .eq('commodity', commodity_name)\
+            .execute()
+            
+        return {"message": f"Successfully deleted all records for '{commodity_name}'"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting commodity: {str(e)}")
 
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
 async def health_check():
